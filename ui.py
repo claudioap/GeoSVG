@@ -45,15 +45,19 @@ class UserInterface:
         self.layers_tree.set_model(self.layers_liststore)
         column_text = Gtk.TreeViewColumn("Name", Gtk.CellRendererText(), text=0)
         self.layers_tree.append_column(column_text)
-        # renderer_toggle.connect("toggled", self.on_cell_toggled)
-        column_toggle = Gtk.TreeViewColumn("Enable", Gtk.CellRendererToggle(), active=1)
+        renderer_toggle = Gtk.CellRendererToggle()
+        column_toggle = Gtk.TreeViewColumn("Enable", renderer_toggle, active=1)
         self.layers_tree.append_column(column_toggle)
 
         self.window.show_all()
 
         # Events
+        renderer_toggle.connect("toggled", self.on_cell_toggled)
         self.window.connect("destroy", Gtk.main_quit)
         open_btn.connect('clicked', self.open_file)
+
+    def run(self):
+        Gtk.main()
 
     def open_file(self, _):
         dialog = Gtk.FileChooserDialog("Choose SVG file", self.window, Gtk.FileChooserAction.OPEN,
@@ -77,5 +81,11 @@ class UserInterface:
             preserve_aspect_ratio=True)
         self.preview.set_from_pixbuf(pixbuf)
 
-    def run(self):
-        Gtk.main()
+    def load_layers(self, layers):
+        self.layers_liststore.clear()
+        for layer in layers:
+            self.layers_liststore.append([layer, True])
+
+    def on_cell_toggled(self, widget, index):
+        self.layers_liststore[index][1] = not self.layers_liststore[index][1]
+        self.controller.set_layer_output(self.layers_liststore[index][0], self.layers_liststore[index][1])

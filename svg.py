@@ -8,6 +8,7 @@ class SVG:
         self.source = BeautifulSoup(source, 'html.parser')
         self.root = self.source.find('svg')
         self.layers = {}
+        self.bounding = None
         for element in list(self.root.children):
             if not isinstance(element, Tag):
                 continue
@@ -17,7 +18,7 @@ class SVG:
     def get_layers(self) -> [str]:
         return self.layers.keys()
 
-    def get_polygons(self, layer: str = None):
+    def get_paths_as_polygons(self, layer: str = None):
         layers = self.layers.values() if layer is None else (self.layers[layer],)
 
         result = {}
@@ -26,6 +27,31 @@ class SVG:
             for path in layer.find_all('path'):
                 paths[path.attrs['id']] = self.parse_path_data(path.attrs['d'])
             result[layer.attrs['id']] = paths
+        return result
+
+    def _calc_bounding_box(self):
+        top, bottom, left, right = float("-inf"), float("inf"), float("inf"), float("-inf")
+        for layer in self.layers.keys():
+            paths = self.get_paths_as_polygons(layer)
+            for path in paths.values():
+                for point in path:
+                    x, y = point
+                    if x < left:
+                        left = x
+                    elif x > right:
+                        right = x
+
+                    if y > top:
+                        top = y
+                    elif y < bottom:
+                        bottom = y
+        self.bounding = top, bottom, left, right
+
+    def get_bounding_box(self):
+        if self.bounding is None:
+            self._calc_bounding_box()
+
+        return self.bounding
 
     @staticmethod
     def parse_path_data(d: str) -> [[(float, float)]]:
