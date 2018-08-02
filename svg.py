@@ -1,4 +1,5 @@
 import re
+from typing import Dict
 
 from bs4 import BeautifulSoup, Tag
 
@@ -18,33 +19,30 @@ class SVG:
     def get_layers(self) -> [str]:
         return self.layers.keys()
 
-    def get_paths_as_polygons(self, layer: str = None):
-        layers = self.layers.values() if layer is None else (self.layers[layer],)
-
-        result = {}
-        for layer in layers:
-            paths = {}
-            for path in layer.find_all('path'):
-                paths[path.attrs['id']] = self.parse_path_data(path.attrs['d'])
-            result[layer.attrs['id']] = paths
-        return result
+    def get_paths_as_polygons(self, layer: str) -> Dict[str, any]:
+        paths = {}
+        layer = self.layers[layer]
+        for path in layer.find_all('path'):
+            paths[path.attrs['id']] = self.parse_path_data(path.attrs['d'])
+        return paths
 
     def _calc_bounding_box(self):
         top, bottom, left, right = float("-inf"), float("inf"), float("inf"), float("-inf")
         for layer in self.layers.keys():
             paths = self.get_paths_as_polygons(layer)
             for path in paths.values():
-                for point in path:
-                    x, y = point
-                    if x < left:
-                        left = x
-                    elif x > right:
-                        right = x
+                for section in path:
+                    for point in section:
+                        x, y = point
+                        if x < left:
+                            left = x
+                        elif x > right:
+                            right = x
 
-                    if y > top:
-                        top = y
-                    elif y < bottom:
-                        bottom = y
+                        if y > top:
+                            top = y
+                        elif y < bottom:
+                            bottom = y
         self.bounding = top, bottom, left, right
 
     def get_bounding_box(self):
@@ -84,7 +82,7 @@ class SVG:
                 skips -= 1
                 continue
 
-            if char == ' ':
+            elif char == ' ':
                 new_number = True
                 continue
 
@@ -102,7 +100,6 @@ class SVG:
             elif char == ',':
                 raise Exception("Invalid path data string")
             elif char.isalpha():
-                new_number = True
                 if char == 'M':
                     x = coordinates[coordinate_index]
                     y = coordinates[coordinate_index + 1]
@@ -112,6 +109,7 @@ class SVG:
                     if section:
                         sections.append(section)
                     sections = []
+                    new_number = False
                 elif char == 'L':
                     section.append(current_position)
                     x = coordinates[coordinate_index]
@@ -152,8 +150,11 @@ class SVG:
                     current_position = current_position[0], current_position[1] + float(y)
                 elif char in ('z', 'Z'):
                     section.append(current_position)
+                    section.append(section[0])
                     if section:
                         sections.append(section)
                     section = []
                 else:
                     raise Exception("Sting has unimplemented commands. Data: " + d)
+
+        return sections
