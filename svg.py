@@ -69,13 +69,13 @@ class SVG:
         section = []
 
         current_position = 0.0, 0.0
+        absolute_positions = True
 
         coord_exp = re.compile('([-e\d.]+)(?: |,)')
         coordinates = coord_exp.findall(d)
         coordinate_index = 0
 
         skips = 0
-
         new_number = True
         for char in d:
             if skips > 0:
@@ -86,15 +86,18 @@ class SVG:
                 new_number = True
                 continue
 
-            elif char.isnumeric():
+            elif char.isnumeric() or char == '-':
                 if not new_number:
                     continue
                 section.append(current_position)
                 x = coordinates[coordinate_index]
                 y = coordinates[coordinate_index + 1]
                 coordinate_index += 2
-                skips = len(x) + len(y) + 1
-                current_position = float(x), float(y)
+                skips = len(x) + len(y)
+                if absolute_positions:
+                    current_position = float(x), float(y)
+                else:
+                    current_position = current_position[0] + float(x), current_position[1] + float(y)
                 new_number = False
 
             elif char == ',':
@@ -106,6 +109,18 @@ class SVG:
                     coordinate_index += 2
                     skips = len(x) + len(y) + 1
                     current_position = float(x), float(y)
+                    if section:
+                        sections.append(section)
+                    sections = []
+                    new_number = False
+                if char == 'm':
+                    absolute_positions = False
+                    x = coordinates[coordinate_index]
+                    y = coordinates[coordinate_index + 1]
+                    coordinate_index += 2
+                    skips = len(x) + len(y) + 1
+                    current_position = current_position[0] + float(x), current_position[1] + float(y)
+                    current_position = current_position[0] + float(x), current_position[1] + float(y)
                     if section:
                         sections.append(section)
                     sections = []
