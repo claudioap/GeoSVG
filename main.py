@@ -9,6 +9,8 @@ class Controller:
         self.svg = None
         self.geojson = None
         self.layer_output = []
+        self.bounds = [0.0, 0.0, 0.0, 0.0]
+        self.rotation = 0.0
         self.ui.run()
 
     def load_svg(self, path):
@@ -17,6 +19,7 @@ class Controller:
             self.svg = svg
             self.geojson = GeoJSON(self.svg)
             self.layer_output = list(self.svg.get_layers())
+            self.update_result()
 
         self.ui.load_preview(path)
         layers = self.svg.get_layers()
@@ -28,7 +31,26 @@ class Controller:
         else:
             self.layer_output.remove(layer)
 
-        self.geojson.calculate(self.layer_output, (0.0, 1.0, 0.0, 1.0), 0.0)
+    def update_bounding(self, direction: chr, value):
+        if direction == 'N':
+            self.bounds[0] = value
+        elif direction == 'S':
+            self.bounds[1] = value
+        elif direction == 'E':
+            self.bounds[2] = value
+        elif direction == 'W':
+            self.bounds[3] = value
+        self.update_result()
+
+    def update_rotation(self, rotation):
+        self.rotation = rotation
+        self.update_result()
+
+    def update_result(self):
+        print(f'Updating to match the bounds {self.bounds} with {self.rotation}º of rotation.')
+        geojson = self.geojson.calculate(self.layer_output, self.bounds, 0.0)
+        self.ui.set_output(geojson)
+        self.ui.draw_features(geojson)
 
 
 if __name__ == "__main__":

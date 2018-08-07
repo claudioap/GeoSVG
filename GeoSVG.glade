@@ -51,6 +51,36 @@ You can also use the layers tab to filter the output.</property>
       </object>
     </child>
   </object>
+  <object class="GtkAdjustment" id="lat_max">
+    <property name="lower">-90</property>
+    <property name="upper">90</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.01</property>
+  </object>
+  <object class="GtkAdjustment" id="lat_min">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="lon_max">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">0.01</property>
+  </object>
+  <object class="GtkAdjustment" id="lon_min">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">0.01</property>
+    <property name="page_increment">10</property>
+  </object>
+  <object class="GtkAdjustment" id="rotation ">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
   <object class="GtkApplicationWindow" id="window">
     <property name="width_request">800</property>
     <property name="height_request">640</property>
@@ -284,10 +314,11 @@ You can also use the layers tab to filter the output.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton">
+                  <object class="GtkSpinButton" id="lim_north">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">0.000000</property>
+                    <property name="adjustment">lat_max</property>
                     <property name="digits">6</property>
                   </object>
                   <packing>
@@ -296,10 +327,11 @@ You can also use the layers tab to filter the output.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton">
+                  <object class="GtkSpinButton" id="lim_south">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">0.000000</property>
+                    <property name="adjustment">lat_min</property>
                     <property name="digits">6</property>
                   </object>
                   <packing>
@@ -308,10 +340,11 @@ You can also use the layers tab to filter the output.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton">
+                  <object class="GtkSpinButton" id="lim_east">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">0.000000</property>
+                    <property name="adjustment">lon_max</property>
                     <property name="digits">6</property>
                   </object>
                   <packing>
@@ -320,10 +353,11 @@ You can also use the layers tab to filter the output.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton">
+                  <object class="GtkSpinButton" id="lim_west">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">0.000000</property>
+                    <property name="adjustment">lon_min</property>
                     <property name="digits">6</property>
                   </object>
                   <packing>
@@ -344,11 +378,12 @@ You can also use the layers tab to filter the output.</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkSpinButton">
+                  <object class="GtkSpinButton" id="rotation">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="text" translatable="yes">0.000000</property>
-                    <property name="digits">6</property>
+                    <property name="adjustment">rotation </property>
+                    <property name="digits">1</property>
                   </object>
                   <packing>
                     <property name="left_attach">1</property>
@@ -396,9 +431,19 @@ You can also use the layers tab to filter the output.</property>
               </packing>
             </child>
             <child>
-              <object class="GtkTextView">
+              <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="shadow_type">in</property>
+                <property name="max_content_width">200</property>
+                <child>
+                  <object class="GtkTextView" id="output">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="editable">False</property>
+                    <property name="wrap_mode">word</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="position">3</property>
