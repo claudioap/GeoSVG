@@ -7,6 +7,7 @@ class GeoJSON:
     def __init__(self, svg):
         self.svg = svg
         self.feature_collections = {}
+        self.polygons = []
 
     def calculate(self, layers: [str], map_bounding: (float, float, float, float), rotation: float) -> str:
         top, bottom, left, right = self.svg.get_bounding_box()
@@ -25,6 +26,12 @@ class GeoJSON:
                                        ' 0 0 1')
         transformation_matrix = scaling_matrix * rotation_matrix * translation_matrix
 
+        top, bottom, left, right = map_bounding
+        center = (right - left) / 2, (top - bottom) / 2
+        x_scale = right - left
+        y_scale = bottom - top
+        del top, bottom, left, right
+
         feature_collections = []
         for layer in layers:
             paths = self.svg.get_paths_as_polygons(layer)
@@ -36,7 +43,9 @@ class GeoJSON:
                     for point in polygon:
                         vector = np.matrix((*point, 1)).transpose()
                         result = (transformation_matrix * vector).transpose()[0, :2].tolist()[0]
+                        result = result[0] + center[0], result[1] + center[0]
                         poly_coordinates.append(result)
+                    self.polygons.append(poly_coordinates)
                     coordinates.append(poly_coordinates)
 
                 polygon_count = len(path)
@@ -57,4 +66,4 @@ class GeoJSON:
 
                 feature_collection['features'].append(feature)
             feature_collections.append(feature_collection)
-        return json.dumps(feature_collections)
+        return json.dumps(feature_collections, indent=2)

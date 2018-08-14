@@ -24,27 +24,28 @@ class UserInterface:
         open_btn = builder.get_object("open_btn")
         self.preview = builder.get_object("preview")
         self.layers_tree = builder.get_object("layers_tree")
-        self.svg_bounding_top = builder.get_object("b_top")
-        self.svg_bounding_bottom = builder.get_object("b_bottom")
-        self.svg_bounding_left = builder.get_object("b_left")
-        self.svg_bounding_right = builder.get_object("b_right")
         self.lim_north = builder.get_object("lim_north")
         self.lim_south = builder.get_object("lim_south")
         self.lim_east = builder.get_object("lim_east")
         self.lim_west = builder.get_object("lim_west")
         self.rotation = builder.get_object("rotation")
         self.output = builder.get_object("output")
+        self.last_click = builder.get_object("last_click")
+        replace_north_lim = builder.get_object("replace_north_lim")
+        replace_south_lim = builder.get_object("replace_south_lim")
+        replace_east_lim = builder.get_object("replace_east_lim")
+        replace_west_lim = builder.get_object("replace_west_lim")
 
         # Map
         embed = GtkChamplain.Embed()
         self.map_view = embed.get_view()
         self.map_view.set_reactive(True)
         self.map_view.set_property('kinetic-mode', True)
-        self.map_view.set_property('zoom-level', 12)
+        self.map_view.set_property('zoom-level', 16)
         scale = Champlain.Scale()
         scale.connect_view(self.map_view)
         self.map_view.bin_layout_add(scale, Clutter.BinAlignment.START, Clutter.BinAlignment.END)
-        self.map_view.center_on(38.5775474, -9.1254975)
+        self.map_view.center_on(38.66, -9.20523)
         boxes.add(embed)
 
         # Layers pane
@@ -59,14 +60,19 @@ class UserInterface:
         self.window.show_all()
 
         # Events
-        renderer_toggle.connect("toggled", self.on_layer_toggled)
+        renderer_toggle.connect("toggled", self.__on_layer_toggled)
         self.window.connect("destroy", Gtk.main_quit)
         open_btn.connect('clicked', self.open_file)
-        self.lim_north.connect('changed', self.update_north_lim)
-        self.lim_south.connect('changed', self.update_south_lim)
-        self.lim_east.connect('changed', self.update_east_lim)
-        self.lim_west.connect('changed', self.update_west_lim)
+        self.lim_north.connect('changed', self.__update_north_lim)
+        self.lim_south.connect('changed', self.__update_south_lim)
+        self.lim_east.connect('changed', self.__update_east_lim)
+        self.lim_west.connect('changed', self.__update_west_lim)
         self.rotation.connect('changed', lambda w: self.controller.update_rotation(w.get_value()))
+        self.map_view.connect('button-release-event', self.__on_map_mouse_click, self.map_view)
+        replace_north_lim.connect('clicked', lambda _: self.controller.replace_lim('N'))
+        replace_south_lim.connect('clicked', lambda _: self.controller.replace_lim('S'))
+        replace_east_lim.connect('clicked', lambda _: self.controller.replace_lim('E'))
+        replace_west_lim.connect('clicked', lambda _: self.controller.replace_lim('W'))
 
     def run(self):
         Gtk.main()
@@ -87,25 +93,30 @@ class UserInterface:
         dialog.destroy()
 
     # TODO validate N>S, E>W
-    def update_north_lim(self, widget):
+    def __update_north_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bounding('N', val)
+        self.controller.update_bound('N', val)
 
-    def update_south_lim(self, widget):
+    def __update_south_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bounding('S', val)
+        self.controller.update_bound('S', val)
 
-    def update_east_lim(self, widget):
+    def __update_east_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bounding('E', val)
+        self.controller.update_bound('E', val)
 
-    def update_west_lim(self, widget):
+    def __update_west_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bounding('W', val)
+        self.controller.update_bound('W', val)
 
-    def on_layer_toggled(self, _, index):
+    def __on_layer_toggled(self, _, index):
         self.layers_liststore[index][1] = not self.layers_liststore[index][1]
         self.controller.set_layer_output(self.layers_liststore[index][0], self.layers_liststore[index][1])
+
+    def __on_map_mouse_click(self, _, event, view):
+        x, y = event.x, event.y
+        self.controller.record_click(view.x_to_longitude(x), view.y_to_latitude(y))
+        return True
 
     # Action methods
     def load_layers(self, layers):
@@ -125,5 +136,13 @@ class UserInterface:
         textbuffer = self.output.get_buffer()
         textbuffer.set_text(value)
 
-    def draw_features(self):
-        pass
+    def set_last_click(self, lon, lat):
+        self.last_click.set_text(f'Lon: {lon}\nLat: {lat}')
+
+    def draw_polygons(self, polygons):
+        for polygon in polygons:
+            polygon_layer = Champlain.PathLayer()
+            for point in polygon:
+                coord = Champlain.Coordinate.new_full(*point)
+                polygon_layer.add_node(coord)
+            self.map_view.add_layer(polygon_layer)

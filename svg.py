@@ -58,7 +58,6 @@ class SVG:
         :param d: SVG path d attribute
         :return: List of sections, with each section being a disjoint list of points.
         """
-        print(d)
         if d[0].lower() != 'm':
             raise Exception("Path start command not present")
 
@@ -112,8 +111,7 @@ class SVG:
                     if section:
                         sections.append(section)
                     sections = []
-                    new_number = False
-                if char == 'm':
+                elif char == 'm':
                     absolute_positions = False
                     x = coordinates[coordinate_index]
                     y = coordinates[coordinate_index + 1]
@@ -124,7 +122,6 @@ class SVG:
                     if section:
                         sections.append(section)
                     sections = []
-                    new_number = False
                 elif char == 'L':
                     section.append(current_position)
                     x = coordinates[coordinate_index]
@@ -171,5 +168,7 @@ class SVG:
                     section = []
                 else:
                     raise Exception("Sting has unimplemented commands. Data: " + d)
+
+                new_number = False
 
         return sections

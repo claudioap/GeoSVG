@@ -11,6 +11,7 @@ class Controller:
         self.layer_output = []
         self.bounds = [0.0, 0.0, 0.0, 0.0]
         self.rotation = 0.0
+        self.last_click = None
         self.ui.run()
 
     def load_svg(self, path):
@@ -31,7 +32,7 @@ class Controller:
         else:
             self.layer_output.remove(layer)
 
-    def update_bounding(self, direction: chr, value):
+    def update_bound(self, direction: chr, value):
         if direction == 'N':
             self.bounds[0] = value
         elif direction == 'S':
@@ -50,7 +51,17 @@ class Controller:
         print(f'Updating to match the bounds {self.bounds} with {self.rotation}º of rotation.')
         geojson = self.geojson.calculate(self.layer_output, self.bounds, 0.0)
         self.ui.set_output(geojson)
-        self.ui.draw_features(geojson)
+        self.ui.draw_polygons(self.geojson.polygons)
+
+    def record_click(self, lon: float, lat: float):
+        self.last_click = lon, lat
+        self.ui.set_last_click(lon, lat)
+
+    def replace_lim(self, direction: chr):
+        if direction in ('N', 'S'):
+            self.update_bound(direction, self.last_click[1])
+        else:
+            self.update_bound(direction, self.last_click[0])
 
 
 if __name__ == "__main__":
