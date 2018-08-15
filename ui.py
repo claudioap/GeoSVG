@@ -74,6 +74,9 @@ class UserInterface:
         replace_east_lim.connect('clicked', lambda _: self.controller.replace_lim('E'))
         replace_west_lim.connect('clicked', lambda _: self.controller.replace_lim('W'))
 
+        # Drawn layers
+        self.layers = []
+
     def run(self):
         Gtk.main()
 
@@ -140,6 +143,9 @@ class UserInterface:
         self.last_click.set_text(f'Lon: {lon}\nLat: {lat}')
 
     def draw_polygons(self, polygons):
+        for layer in self.layers:
+            self.map_view.remove_layer(layer)
+        self.layers.clear()
         for polygon in polygons:
             polygon_layer = Champlain.PathLayer()
             for point in polygon:
@@ -147,6 +153,7 @@ class UserInterface:
                 coord = Champlain.Coordinate.new_full(lon, lat)
                 polygon_layer.add_node(coord)
             self.map_view.add_layer(polygon_layer)
+            self.layers.append(polygon_layer)
 
     def set_boundaries(self, boundaries):
         n, s, e, w = boundaries
