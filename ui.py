@@ -143,6 +143,21 @@ class UserInterface:
         for polygon in polygons:
             polygon_layer = Champlain.PathLayer()
             for point in polygon:
-                coord = Champlain.Coordinate.new_full(*point)
+                lat, lon = point
+                coord = Champlain.Coordinate.new_full(lon, lat)
                 polygon_layer.add_node(coord)
             self.map_view.add_layer(polygon_layer)
+
+    def set_boundaries(self, boundaries):
+        n, s, e, w = boundaries
+        if self.lim_north.get_value() != n:
+            self.lim_north.set_value(n)
+
+        if self.lim_south.get_value() != s:
+            self.lim_south.set_value(s)
+
+        if self.lim_east.get_value() != e:
+            self.lim_east.set_value(e)
+
+        if self.lim_west.get_value() != w:
+            self.lim_west.set_value(w)

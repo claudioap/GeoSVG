@@ -27,7 +27,7 @@ class SVG:
         return paths
 
     def _calc_bounding_box(self):
-        top, bottom, left, right = float("-inf"), float("inf"), float("inf"), float("-inf")
+        top, bottom, left, right = float("inf"), float("-inf"), float("inf"), float("-inf")
         for layer in self.layers.keys():
             paths = self.get_paths_as_polygons(layer)
             for path in paths.values():
@@ -39,9 +39,9 @@ class SVG:
                         elif x > right:
                             right = x
 
-                        if y > top:
+                        if y < top:
                             top = y
-                        elif y < bottom:
+                        elif y > bottom:
                             bottom = y
         self.bounding = top, bottom, left, right
 

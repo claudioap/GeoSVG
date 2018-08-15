@@ -41,6 +41,8 @@ class Controller:
             self.bounds[2] = value
         elif direction == 'W':
             self.bounds[3] = value
+
+        self.ui.set_boundaries(self.bounds)
         self.update_result()
 
     def update_rotation(self, rotation):
