@@ -18,17 +18,19 @@ class GeoJSON:
         f_width = f_right - f_left
         f_height = f_top - f_bot
 
-        theta = np.radians(rotation+180)
+        theta = np.radians(rotation + 180)
 
         center_translation_matrix = np.matrix(('1 0 {x};'
                                                '0 1 {y};'
                                                '0 0  1')
                                               .format(x=-(i_left + i_right) / 2, y=-(i_top + i_bot) / 2))
 
-        rotation_matrix = np.matrix(('{cos} -{sin}  0;'
+        sin = np.sin(theta)
+        rotation_matrix = np.matrix(('{cos} {nsin}  0;'
                                      '{sin}  {cos}  0;'
                                      '  0      0    1')
-                                    .format(cos=np.cos(theta), sin=np.sin(theta)))
+                                    .format(cos=np.cos(theta), sin=sin, nsin=-sin))
+        del sin
 
         scaling_matrix = np.matrix(('{x_scale}  0      0;'
                                     '0      {y_scale}  0;'

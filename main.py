@@ -51,7 +51,7 @@ class Controller:
 
     def update_result(self):
         print(f'Updating to match the bounds {self.bounds} with {self.rotation}º of rotation.')
-        geojson = self.geojson.calculate(self.layer_output, self.bounds, 0.0)
+        geojson = self.geojson.calculate(self.layer_output, self.bounds, self.rotation)
         self.ui.set_output(geojson)
         self.ui.draw_polygons(self.geojson.polygons)
 
