@@ -18,16 +18,19 @@ In case you run it as it is, GUI included, you'll also need:
 > gtk, libchamplain, libglade (in case gtk doesn't bundle it)
 
 ## Considerations
-Both standard and inkscape's SVG is fine.
+Both standard and Inkscape's SVG is fine.
 Everything has to be a `path`. Other elements are discarded.
 Only polygons made of straight lines are supported.
-Lucky you, inkscape easily turns everything into paths.
+Lucky you, Inkscape easily turns everything into paths.
 
 Ratios aren't preserved.
 It is up to you to insert proper coordinates, and/or click on the correct places.
 
-Rotation support isn't properly baked in, and bounds aren't considered.
+Rotation support isn't properly baked in, and bounds aren't properly considered when a polygon is rotated.
 A few algorithm tweaks are needed.
 You can manually adjust rotated stuff.
 In case you need precision rotate the SVG itself.
 Once again, Inkscape excels with that kinda stuff.
+
+Anything with a translation attached to it will mess up with the output. 
+Ideally you'd have no groups. Layers might or might not work.

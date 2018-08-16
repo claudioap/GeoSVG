@@ -68,107 +68,155 @@ class SVG:
         section = []
 
         current_position = 0.0, 0.0
-        absolute_positions = True
 
-        coord_exp = re.compile('([-e\d.]+)(?: |,)')
-        coordinates = coord_exp.findall(d)
-        coordinate_index = 0
+        command_exp = re.compile('(?P<command>[MmLlHhVvZz])(?P<argument>[-e.,\d ]+)')
+        coord_exp = re.compile('([-e\d.]+)[ ,]')
+        commands = command_exp.findall(d)
 
-        skips = 0
-        new_number = True
-        for char in d:
-            if skips > 0:
-                skips -= 1
-                continue
+        for command in commands:
+            command, arguments = command
+            coordinates = coord_exp.findall(arguments)
+            coordinate_count = len(coordinates)
 
-            elif char == ' ':
-                new_number = True
-                continue
+            if command == 'M':
+                if coordinate_count < 2:
+                    raise MissingPathArgument(d, command)
+                if coordinate_count % 2 != 0:
+                    raise InvalidPath(d, 'M command with odd number of coordinates')
+                if section:
+                    sections.append(section)
+                sections = []
 
-            elif char.isnumeric() or char == '-':
-                if not new_number:
-                    continue
+                current_position = float(coordinates[0]), float(coordinates[1])
+                additional = coordinates[2:]
+                odd = False
+                for index, _ in enumerate(additional):
+                    if odd:
+                        odd = False
+                        continue
+                    section.append(current_position)
+                    current_position = float(additional[index]), float(additional[index + 1])
+
+                    odd = True
+            elif command == 'm':
+                if coordinate_count < 2:
+                    raise MissingPathArgument(d, command)
+                if coordinate_count % 2 != 0:
+                    raise InvalidPath(d, 'M command with odd number of coordinates')
+                if section:
+                    sections.append(section)
+                sections = []
+
+                new_x = current_position[0] + float(coordinates[0])
+                new_y = current_position[1] + float(coordinates[1])
+                current_position = new_x, new_y
+                additional = coordinates[2:]
+                odd = False
+                for index, _ in enumerate(additional):
+                    if odd:
+                        odd = False
+                        continue
+                    section.append(current_position)
+                    new_x = current_position[0] + float(additional[index])
+                    new_y = current_position[1] + float(additional[index + 1])
+                    current_position = new_x, new_y
+                    odd = True
+            elif command == 'l':
+                if coordinate_count < 2:
+                    raise MissingPathArgument(d, command)
+
+                if coordinate_count % 2 != 0:
+                    raise InvalidPath(d, 'l command with odd number of coordinates')
+
                 section.append(current_position)
-                x = coordinates[coordinate_index]
-                y = coordinates[coordinate_index + 1]
-                coordinate_index += 2
-                skips = len(x) + len(y)
-                if absolute_positions:
-                    current_position = float(x), float(y)
-                else:
-                    current_position = current_position[0] + float(x), current_position[1] + float(y)
-                new_number = False
+                new_x = current_position[0] + float(coordinates[0])
+                new_y = current_position[1] + float(coordinates[1])
+                current_position = new_x, new_y
+                additional = coordinates[2:]
+                odd = False
+                for index, _ in enumerate(additional):
+                    if odd:
+                        odd = False
+                        continue
+                    section.append(current_position)
+                    new_x = current_position[0] + float(additional[index])
+                    new_y = current_position[1] + float(additional[index + 1])
+                    current_position = new_x, new_y
+                    odd = True
+            elif command == 'L':
+                if coordinate_count < 2:
+                    raise MissingPathArgument(d, command)
+                if coordinate_count % 2 != 0:
+                    raise InvalidPath(d, 'L command with odd number of coordinates')
 
-            elif char == ',':
-                raise Exception("Invalid path data string")
-            elif char.isalpha():
-                if char == 'M':
-                    x = coordinates[coordinate_index]
-                    y = coordinates[coordinate_index + 1]
-                    coordinate_index += 2
-                    skips = len(x) + len(y) + 1
-                    current_position = float(x), float(y)
-                    if section:
-                        sections.append(section)
-                    sections = []
-                elif char == 'm':
-                    absolute_positions = False
-                    x = coordinates[coordinate_index]
-                    y = coordinates[coordinate_index + 1]
-                    coordinate_index += 2
-                    skips = len(x) + len(y) + 1
-                    current_position = current_position[0] + float(x), current_position[1] + float(y)
-                    current_position = current_position[0] + float(x), current_position[1] + float(y)
-                    if section:
-                        sections.append(section)
-                    sections = []
-                elif char == 'L':
+                section.append(current_position)
+                new_x = float(coordinates[0])
+                new_y = float(coordinates[1])
+                current_position = new_x, new_y
+                additional = coordinates[2:]
+                odd = False
+                for index, _ in enumerate(additional):
+                    if odd:
+                        odd = False
+                        continue
                     section.append(current_position)
-                    x = coordinates[coordinate_index]
-                    y = coordinates[coordinate_index + 1]
-                    coordinate_index += 2
-                    skips = len(x) + len(y) + 1
-                    current_position = float(x), float(y)
-                elif char == 'H':
-                    section.append(current_position)
-                    x = coordinates[coordinate_index]
-                    coordinate_index += 1
-                    skips = len(x) + 1
-                    current_position = float(x), current_position[1]
-                elif char == 'V':
-                    section.append(current_position)
-                    y = coordinates[coordinate_index]
-                    coordinate_index += 1
-                    skips = len(y) + 1
-                    current_position = current_position[0], float(y)
-                elif char == 'l':
-                    section.append(current_position)
-                    x = coordinates[coordinate_index]
-                    y = coordinates[coordinate_index + 1]
-                    coordinate_index += 2
-                    skips = len(x) + len(y) + 1
-                    current_position = current_position[0] + float(x), current_position[1] + float(y)
-                elif char == 'h':
-                    section.append(current_position)
-                    x = coordinates[coordinate_index]
-                    coordinate_index += 1
-                    skips = len(x) + 1
-                    current_position = current_position[0] + float(x), current_position[1]
-                elif char == 'v':
-                    section.append(current_position)
-                    y = coordinates[coordinate_index]
-                    coordinate_index += 1
-                    skips = len(y) + 1
-                    current_position = current_position[0], current_position[1] + float(y)
-                elif char in ('z', 'Z'):
-                    section.append(current_position)
-                    section.append(section[0])
-                    if section:
-                        sections.append(section)
-                    section = []
-                else:
-                    raise Exception("Sting has unimplemented commands. Data: " + d)
+                    new_x = float(additional[index])
+                    new_y = float(additional[index + 1])
+                    current_position = new_x, new_y
+                    odd = True
+            elif command == 'H':
+                if coordinate_count < 1:
+                    raise MissingPathArgument(d, command)
 
-                new_number = False
+                section.append(current_position)
+                current_position = float(coordinates[-1]), current_position[1]
+            elif command == 'h':
+                if coordinate_count < 1:
+                    raise MissingPathArgument(d, command)
+
+                section.append(current_position)
+                horizontal_distance = 0.0
+                for coordinate in coordinates:
+                    horizontal_distance += float(coordinate)
+                current_position = current_position[0] + horizontal_distance, current_position[1]
+            elif command == 'V':
+                if coordinate_count < 1:
+                    raise MissingPathArgument(d, command)
+
+                section.append(current_position)
+                current_position = current_position[0], float(coordinates[-1])
+            elif command == 'v':
+                if coordinate_count < 1:
+                    raise MissingPathArgument(d, command)
+
+                section.append(current_position)
+                horizontal_distance = 0.0
+                for coordinate in coordinates:
+                    horizontal_distance += float(coordinate)
+                current_position = current_position[0], current_position[1] + horizontal_distance
+            elif command in ('z', 'Z'):
+                section.append(current_position)
+                section.append(section[0])
+                if section:
+                    sections.append(section)
+                section = []
+            else:
+                raise InvalidPath(d, "Sting has unimplemented commands: " + command)
+
+        # Close last section
+        section.append(current_position)
+        section.append(section[0])
+        if section:
+            sections.append(section)
 
         return sections
+
+
+class InvalidPath(Exception):
+    def __init__(self, d, description):
+        super().__init__(f'Unable to parse a path with the following data: {d}\n Cause: {description}')
+
+
+class MissingPathArgument(InvalidPath):
+    def __init__(self, d, command):
+        super().__init__(d, f'{command} command without argument')

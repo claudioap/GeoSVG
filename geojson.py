@@ -18,7 +18,7 @@ class GeoJSON:
         f_width = f_right - f_left
         f_height = f_top - f_bot
 
-        theta = np.radians(rotation)
+        theta = np.radians(rotation+180)
 
         center_translation_matrix = np.matrix(('1 0 {x};'
                                                '0 1 {y};'
