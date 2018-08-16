@@ -65,11 +65,14 @@ class GeoJSON:
 
                 polygon_count = len(path)
                 if polygon_count > 1:
+                    multi_poly = []
+                    for figure in coordinates:
+                        multi_poly.append([figure])
                     feature = {'type': 'Feature',
                                'properties': {'name': name},
                                'geometry':
                                    {'type': 'MultiPolygon',
-                                    'coordinates': coordinates}}
+                                    'coordinates': multi_poly}}
                 elif polygon_count == 1:
                     feature = {'type': 'Feature',
                                'properties': {'name': name},

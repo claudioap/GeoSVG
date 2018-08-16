@@ -32,7 +32,7 @@ class Controller:
         else:
             self.layer_output.remove(layer)
 
-    def update_bound(self, direction: chr, value):
+    def update_boundaries(self, direction: chr, value, update_ui=True):
         if direction == 'N':
             self.bounds[0] = value
         elif direction == 'S':
@@ -42,7 +42,8 @@ class Controller:
         elif direction == 'W':
             self.bounds[3] = value
 
-        self.ui.set_boundaries(self.bounds)
+        if update_ui:
+            self.ui.set_boundaries(self.bounds)
         self.update_result()
 
     def update_rotation(self, rotation):
@@ -61,9 +62,9 @@ class Controller:
 
     def replace_lim(self, direction: chr):
         if direction in ('N', 'S'):
-            self.update_bound(direction, self.last_click[1])
+            self.update_boundaries(direction, self.last_click[1])
         else:
-            self.update_bound(direction, self.last_click[0])
+            self.update_boundaries(direction, self.last_click[0])
 
 
 if __name__ == "__main__":

@@ -98,19 +98,19 @@ class UserInterface:
     # TODO validate N>S, E>W
     def __update_north_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bound('N', val)
+        self.controller.update_boundaries('N', val, update_ui=False)
 
     def __update_south_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bound('S', val)
+        self.controller.update_boundaries('S', val, update_ui=False)
 
     def __update_east_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bound('E', val)
+        self.controller.update_boundaries('E', val, update_ui=False)
 
     def __update_west_lim(self, widget):
         val = widget.get_value()
-        self.controller.update_bound('W', val)
+        self.controller.update_boundaries('W', val, update_ui=False)
 
     def __on_layer_toggled(self, _, index):
         self.layers_liststore[index][1] = not self.layers_liststore[index][1]
