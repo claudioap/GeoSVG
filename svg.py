@@ -66,7 +66,7 @@ class SVG:
 
         current_position = 0.0, 0.0
 
-        command_exp = re.compile('(?P<command>[MmLlHhVvZzc])(?P<argument>[-e.,\d ]+)')
+        command_exp = re.compile('(?P<command>[MmLlHhVvZzCc])(?P<argument>[-e.,\d ]+)')
         coord_exp = re.compile('([-e\d.]+)[ ,]?')
         commands = command_exp.findall(d)
 
@@ -210,6 +210,20 @@ class SVG:
                     section.append(current_position)
                     new_x = current_position[0] + float(coordinates[index + 4])
                     new_y = current_position[1] + float(coordinates[index + 5])
+                    current_position = new_x, new_y
+            elif command == 'C':  # Not compliant, just flattens the curve
+                if coordinate_count < 6:
+                    raise MissingPathArgument(d, command)
+                if coordinate_count % 6 != 0:
+                    raise InvalidPath(d, 'c command with wrong number of coordinates')
+                if section:
+                    sections.append(section)
+                for index, _ in enumerate(coordinates):
+                    if index % 6 != 0:
+                        continue
+                    section.append(current_position)
+                    new_x = float(coordinates[index + 4])
+                    new_y = float(coordinates[index + 5])
                     current_position = new_x, new_y
             else:
                 raise InvalidPath(d, "Sting has unimplemented commands: " + command)
